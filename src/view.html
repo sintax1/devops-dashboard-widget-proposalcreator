@@ -1,7 +1,11 @@
 <div class="ng-cloak">
   <h3>Working Proposal</h3>
   <div class="form-group">
-    <ui-select ng-model="proposalTitle.selected" on-select="titleSelected($item)">
+    <ui-select ng-model="proposalTitle.selected" 
+               on-select="titleSelected($item)" 
+               class="btn-group bootstrap-select form-control"
+               ng-disabled="false"
+               append-to-body="true">
       <ui-select-match placeholder="Select or search for a Proposal title ...">{{$select.selected}}</ui-select-match>
       <ui-select-choices repeat="title in getProposalTitles($select.search) | filter: $select.search">
         <div ng-bind="title"></div>
@@ -17,12 +21,13 @@
     <hr/>
     <h3>Proposal Search</h3>
     <input type="text" class="form-control" ng-model="searchString" placeholder='Search: e.g. "" or ""' ng-change="search()"/>
-    <ul ng-repeat="section in sections">
-      <li>
-        <div>{{ section.sign }}</div>
-        <div>{{ section.text }}</div>
-      </li>
-      <button ng-click="addSection($index)">Add Section</button>
-    </ul>
+    <br/>
+    <div ng-repeat="section in sections" class="row" style="border: 1px dotted; padding-top: 5px;">
+      <div class="col-sm-12">
+        <h4>{{ section.sign }}</h4>
+        <p>{{ section.text }}</p>
+        <a href class="learn-more" ng-click="addSection($index)" style="cursor: pointer;">Add to Proposal</a>
+      </div>
+    </div>
   </div>
 </div>
