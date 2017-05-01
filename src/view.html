@@ -1,4 +1,9 @@
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- <script src="bower_components/angular-bootstrap/ui-bootstrap.min.js"></script> -->
+
 <div class="ng-cloak">
+
+  <!-- Proposal -->
   <h3>Working Proposal</h3>
   <div class="form-group">
     <ui-select ng-model="proposalTitle.selected" 
@@ -11,23 +16,41 @@
         <div ng-bind="title"></div>
       </ui-select-choices>
     </ui-select>
-  </div>
-  <div class="form-group">
+
     <summernote config="options" ng-model="proposalBody" on-init="init()" 
       on-enter="enter()" on-focus="focus(evt)" on-blur="blur(evt)"
       on-paste="paste()" on-keyup="keyup(evt)" on-keydown="keydown(evt)"
       on-change="change(contents)" on-image-upload="imageUpload(files)"></summernote>
+
     <span class="pull-right">{{ savedMsg }}</span>
-    <hr/>
+  </div>
+  <hr/>
+
+  <!-- Proposal Query -->
+  <div class="form-group">
     <h3>Proposal Search</h3>
-    <input type="text" class="form-control" ng-model="searchString" placeholder='Search: e.g. "" or ""' ng-change="search()"/>
+    <input type="text" class="form-control" ng-model="searchString" placeholder='Search: e.g. "hunt service" or "training"' ng-change="search()"/>
     <br/>
     <div ng-repeat="section in sections" class="row" style="border: 1px dotted; padding-top: 5px;">
       <div class="col-sm-12">
         <h4>{{ section.sign }}</h4>
-        <p>{{ section.text }}</p>
+        <p ng-bind-html="section.text | highlight:this"></p>
+        <br/>
+        <ul id="comments">
+          <li>User comment 1</li>
+          <li>User comment 2</li>
+        </ul>
         <a href class="learn-more" ng-click="addSection($index)" style="cursor: pointer;">Add to Proposal</a>
+        <div id="rating" class="pull-right">
+          <span>Rating: 4/5</span>|<span>Used: 12</span>
+        </div>
       </div>
     </div>
   </div>
+
 </div>
+<style>
+.highlightedText {
+    background: yellow;
+}
+</style>

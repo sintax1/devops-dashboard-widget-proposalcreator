@@ -15,10 +15,21 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
         controller: 'proposalCtrl'
       });
   }])
+
+  /* Popup spinner when waiting for query results */
+  /** @ngInject */
   .factory('loadingModal', loadingModal)
 
+  /* Highlight text found in query results */
   /** @ngInject */
-  .controller('proposalCtrl', ["$scope", "$timeout", "loadingModal", function($scope, $timeout, loadingModal) {
+  .filter('highlight', ["$sce", function highlightFilter($sce) {
+    return function(text, scope) {
+      return $sce.trustAsHtml(text.replace(new RegExp(scope.searchString, 'gi'), '<span class="highlightedText">$&</span>'));    
+    };
+  }])
+
+  /** @ngInject */
+  .controller('proposalCtrl', ["$scope", "$timeout", "config", "loadingModal", function($scope, $timeout, config, loadingModal) {
     var socket = io('/proposals');
     var proposalSaveQueued = false;
     var previousSelectedTitle = '';
@@ -48,9 +59,10 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
 
     $scope.search = function() {
       var q = $scope.searchString;
+      var limit = config.limit || 20;
 
       if (q.length > 1) {
-        socket.emit('search', $scope.searchString);
+        socket.emit('search', {string: $scope.searchString, limit: limit});
       } else {
         $timeout(function() {
           $scope.sections = [];
@@ -83,6 +95,7 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
         ]
     };
 
+    /* summernote events */
     $scope.init = function() { console.log('Summernote is launched'); }
     $scope.enter = function() { console.log('Enter/Return key pressed'); }
     $scope.focus = function(e) { console.log('Editable area is focused'); }
@@ -98,6 +111,7 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
       console.log('image upload:', files);
       console.log('image upload\'s editable:', $scope.editable);
     }
+
     var saveProposal = function() {
       if (!($scope.proposalTitle.selected)) {
         console.error('Proposal Title required');
@@ -116,6 +130,7 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
       }
     }
 
+    /* Get the contents of a saved proposal */
     var getProposal = function(title) {
       loadingModal.open();
       socket.emit('getproposal', title, function(proposal) {
@@ -145,7 +160,7 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
     });
   }]);
 
-  /** @ngInject */
+/** @ngInject */
 function loadingModal($uibModal) {
   var methods = {};
   var opened = false;
@@ -161,7 +176,7 @@ function loadingModal($uibModal) {
         });
         opened = true;
       } else {
-        throw Error('Progress modal opened now');
+        throw Error('loading modal opened now');
       }
     }, 
     close: function() {
@@ -169,13 +184,14 @@ function loadingModal($uibModal) {
         methods.close();
         opened = false;
       } else {
-        throw Error('Progress modal is not active');
+        throw Error('loading modal is not active');
       }
     }
   }
 }
 loadingModal.$inject = ["$uibModal"];;
 
-angular.module("DevopsDashboard.widget.proposalcreator").run(["$templateCache", function($templateCache) {$templateCache.put("app/widgets/proposalcreator/src/edit.html","<form role=form><div class=form-group><label for=sample>Sample</label> <input type=text class=form-control id=sample ng-model=config.sample placeholder=\"Enter sample\"></div></form>");
+
+angular.module("DevopsDashboard.widget.proposalcreator").run(["$templateCache", function($templateCache) {$templateCache.put("app/widgets/proposalcreator/src/edit.html","<form role=form><div class=form-group><label for=limit>Search result limit</label> <input type=number class=form-control id=limit ng-model=config.limit></div></form>");
 $templateCache.put("app/widgets/proposalcreator/src/loadingModal.html","<div class=modal-content><div class=modal-body><div class=\"center-block loader\"></div></div></div><style>\n  .loader {\n    border: 16px solid #f3f3f3; /* Light grey */\n    border-top: 16px solid #3498db; /* Blue */\n    border-radius: 50%;\n    width: 120px;\n    height: 120px;\n    animation: spin 2s linear infinite;\n  }\n\n  @keyframes spin {\n    0% { transform: rotate(0deg); }\n    100% { transform: rotate(360deg); }\n  }\n</style>");
-$templateCache.put("app/widgets/proposalcreator/src/view.html","<div class=ng-cloak><h3>Working Proposal</h3><div class=form-group><ui-select ng-model=proposalTitle.selected on-select=titleSelected($item) class=\"btn-group bootstrap-select form-control\" ng-disabled=false append-to-body=true><ui-select-match placeholder=\"Select or search for a Proposal title ...\">{{$select.selected}}</ui-select-match><ui-select-choices repeat=\"title in getProposalTitles($select.search) | filter: $select.search\"><div ng-bind=title></div></ui-select-choices></ui-select></div><div class=form-group><summernote config=options ng-model=proposalBody on-init=init() on-enter=enter() on-focus=focus(evt) on-blur=blur(evt) on-paste=paste() on-keyup=keyup(evt) on-keydown=keydown(evt) on-change=change(contents) on-image-upload=imageUpload(files)></summernote><span class=pull-right>{{ savedMsg }}</span><hr><h3>Proposal Search</h3><input type=text class=form-control ng-model=searchString placeholder=\'Search: e.g. \"\" or \"\"\' ng-change=search()><br><div ng-repeat=\"section in sections\" class=row style=\"border: 1px dotted; padding-top: 5px;\"><div class=col-sm-12><h4>{{ section.sign }}</h4><p>{{ section.text }}</p><a class=learn-more ng-click=addSection($index) style=\"cursor: pointer;\">Add to Proposal</a></div></div></div></div>");}]);})(window);
+$templateCache.put("app/widgets/proposalcreator/src/view.html","<script src=bower_components/bootstrap/dist/js/bootstrap.min.js></script><div class=ng-cloak><h3>Working Proposal</h3><div class=form-group><ui-select ng-model=proposalTitle.selected on-select=titleSelected($item) class=\"btn-group bootstrap-select form-control\" ng-disabled=false append-to-body=true><ui-select-match placeholder=\"Select or search for a Proposal title ...\">{{$select.selected}}</ui-select-match><ui-select-choices repeat=\"title in getProposalTitles($select.search) | filter: $select.search\"><div ng-bind=title></div></ui-select-choices></ui-select><summernote config=options ng-model=proposalBody on-init=init() on-enter=enter() on-focus=focus(evt) on-blur=blur(evt) on-paste=paste() on-keyup=keyup(evt) on-keydown=keydown(evt) on-change=change(contents) on-image-upload=imageUpload(files)></summernote><span class=pull-right>{{ savedMsg }}</span></div><hr><div class=form-group><h3>Proposal Search</h3><input type=text class=form-control ng-model=searchString placeholder=\'Search: e.g. \"hunt service\" or \"training\"\' ng-change=search()><br><div ng-repeat=\"section in sections\" class=row style=\"border: 1px dotted; padding-top: 5px;\"><div class=col-sm-12><h4>{{ section.sign }}</h4><p ng-bind-html=\"section.text | highlight:this\"></p><br><ul id=comments><li>User comment 1</li><li>User comment 2</li></ul><a class=learn-more ng-click=addSection($index) style=\"cursor: pointer;\">Add to Proposal</a><div id=rating class=pull-right><span>Rating: 4/5</span>|<span>Used: 12</span></div></div></div></div></div><style>\n.highlightedText {\n    background: yellow;\n}\n</style>");}]);})(window);

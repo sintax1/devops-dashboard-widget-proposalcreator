@@ -14,10 +14,21 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
         controller: 'proposalCtrl'
       });
   })
+
+  /* Popup spinner when waiting for query results */
+  /** @ngInject */
   .factory('loadingModal', loadingModal)
 
+  /* Highlight text found in query results */
   /** @ngInject */
-  .controller('proposalCtrl', function($scope, $timeout, loadingModal) {
+  .filter('highlight', function highlightFilter($sce) {
+    return function(text, scope) {
+      return $sce.trustAsHtml(text.replace(new RegExp(scope.searchString, 'gi'), '<span class="highlightedText">$&</span>'));    
+    };
+  })
+
+  /** @ngInject */
+  .controller('proposalCtrl', function($scope, $timeout, config, loadingModal) {
     var socket = io('/proposals');
     var proposalSaveQueued = false;
     var previousSelectedTitle = '';
@@ -47,9 +58,10 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
 
     $scope.search = function() {
       var q = $scope.searchString;
+      var limit = config.limit || 20;
 
       if (q.length > 1) {
-        socket.emit('search', $scope.searchString);
+        socket.emit('search', {string: $scope.searchString, limit: limit});
       } else {
         $timeout(function() {
           $scope.sections = [];
@@ -82,6 +94,7 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
         ]
     };
 
+    /* summernote events */
     $scope.init = function() { console.log('Summernote is launched'); }
     $scope.enter = function() { console.log('Enter/Return key pressed'); }
     $scope.focus = function(e) { console.log('Editable area is focused'); }
@@ -97,6 +110,7 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
       console.log('image upload:', files);
       console.log('image upload\'s editable:', $scope.editable);
     }
+
     var saveProposal = function() {
       if (!($scope.proposalTitle.selected)) {
         console.error('Proposal Title required');
@@ -115,6 +129,7 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
       }
     }
 
+    /* Get the contents of a saved proposal */
     var getProposal = function(title) {
       loadingModal.open();
       socket.emit('getproposal', title, function(proposal) {
@@ -144,7 +159,7 @@ angular.module('DevopsDashboard.widget.proposalcreator', ['adf.provider', 'summe
     });
   });
 
-  /** @ngInject */
+/** @ngInject */
 function loadingModal($uibModal) {
   var methods = {};
   var opened = false;
@@ -160,7 +175,7 @@ function loadingModal($uibModal) {
         });
         opened = true;
       } else {
-        throw Error('Progress modal opened now');
+        throw Error('loading modal opened now');
       }
     }, 
     close: function() {
@@ -168,8 +183,9 @@ function loadingModal($uibModal) {
         methods.close();
         opened = false;
       } else {
-        throw Error('Progress modal is not active');
+        throw Error('loading modal is not active');
       }
     }
   }
 };
+
