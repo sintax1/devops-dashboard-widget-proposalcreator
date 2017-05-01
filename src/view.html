@@ -1,0 +1,28 @@
+<div class="ng-cloak">
+  <h3>Working Proposal</h3>
+  <div class="form-group">
+    <ui-select ng-model="proposalTitle.selected" on-select="titleSelected($item)">
+      <ui-select-match placeholder="Select or search for a Proposal title ...">{{$select.selected}}</ui-select-match>
+      <ui-select-choices repeat="title in getProposalTitles($select.search) | filter: $select.search">
+        <div ng-bind="title"></div>
+      </ui-select-choices>
+    </ui-select>
+  </div>
+  <div class="form-group">
+    <summernote config="options" ng-model="proposalBody" on-init="init()" 
+      on-enter="enter()" on-focus="focus(evt)" on-blur="blur(evt)"
+      on-paste="paste()" on-keyup="keyup(evt)" on-keydown="keydown(evt)"
+      on-change="change(contents)" on-image-upload="imageUpload(files)"></summernote>
+    <span class="pull-right">{{ savedMsg }}</span>
+    <hr/>
+    <h3>Proposal Search</h3>
+    <input type="text" class="form-control" ng-model="searchString" placeholder='Search: e.g. "" or ""' ng-change="search()"/>
+    <ul ng-repeat="section in sections">
+      <li>
+        <div>{{ section.sign }}</div>
+        <div>{{ section.text }}</div>
+      </li>
+      <button ng-click="addSection($index)">Add Section</button>
+    </ul>
+  </div>
+</div>

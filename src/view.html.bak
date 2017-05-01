@@ -1,0 +1,22 @@
+<h3>Working Proposal</h3>
+<summernote config="options" ng-model="text"></summernote>
+<hr/>
+<h3>Proposal Search</h3>
+<input type="text" class="form-control" ng-model="searchString" placeholder='Search: e.g. "" or ""' ng-change="search()"/>
+<ul ng-repeat="section in sections">
+  <li>
+    <div>{{ section.title }}</div>
+    <div>{{ section.body }}</div>
+    <div>{{ section.user }}</div>
+    <div>{{ section.date }}</div>
+    <div>{{ section.meta.rating }}</div>
+    <div>{{ section.meta.used }}</div>
+    <ul ng-repeat="comment in section.meta.comments">
+      <li>{{ comment }}</li>
+    </ul>
+    <ul ng-repeat="tag in section.meta.tags">
+      <li>{{ tag }}</li>
+    </ul>
+  </li>
+  <button ng-click="addSection($index)">Add Section</button>
+</ul>

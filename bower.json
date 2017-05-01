@@ -1,0 +1,40 @@
+{
+  "name": "devops-dashboard-widget-proposalcreator",
+  "version": "0.1.0",
+  "main": "dist/devops-dashboard-widget-proposalcreator.js",
+  "ignore": [
+    "bower.json",
+    ".bowerrc",
+    ".jshintrc",
+    ".gitignore",
+    "gulpfile.js",
+    "node_modules",
+    "package.json",
+    "components",
+    "src"
+  ],
+  "keywords": [
+    "dashboard",
+    "widget",
+    "adf",
+    "adf-widget",
+    "devops-dashboard-widget"
+  ],
+  "description": "Quickly build new proposals from historic proposal data",
+  "dependencies": {
+    "angular-dashboard-framework": ">=0.10",
+    "angular-summernote": "^0.8.1"
+  },
+  "devDependencies": {
+    "angular-local-storage": ">=0.2"
+  },
+  "overrides": {
+    "bootstrap": {
+      "main": [
+        "less/bootstrap.less",
+        "dist/css/bootstrap.css",
+        "dist/js/bootstrap.js"
+      ]
+    }
+  }
+}
